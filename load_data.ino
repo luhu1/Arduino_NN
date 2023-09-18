@@ -29,14 +29,17 @@
 #include "bnn.h"
 #include "matrix.h"
 #include "ops.h"
+#include "sram.h"
+#include <Arduino.h>
 
 #define IMAGE_SIZE 784
-#define number_imgs 4 // number of images I want to train. 
+#define number_imgs 1 // number of images I want to train. 
+extern "C" char* sbrk(int incr);
 
-char train_images[] = "tr-img";
-char train_labels[] = "tr-la";
-char test_images[] = "te-img";
-char test_labels[] = "te-la";
+static const char train_images[] = "tr-img";
+static const char train_labels[] = "tr-la";
+static const char test_images[] = "te-img";
+static const char test_labels[] = "te-la";
 File train_image_file, train_label_file;
 File test_image_file, test_label_file;
 
@@ -63,15 +66,18 @@ void setup() {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
-  Serial.print("Initializing SD card...");
+  Serial.print(F("Initializing SD card..."));
   //pinMode(10, OUTPUT); // change this to 53 on a mega  // don't follow this!!
   //digitalWrite(10, HIGH);
   if (!SD.begin(10)) {
-    Serial.println("initialization failed!");
+    Serial.println(F("initialization failed!"));
     while (1);
   }
   
-  Serial.println("initialization done.");
+  Serial.println(F("initialization done."));
+  //Serial.println(availableMemory());
+
+  //display_freeram();
 
   // open the file for reading:
   train_image_file = SD.open(train_images);
@@ -96,32 +102,38 @@ void setup() {
         Serial.println("Train Label File Magic Number:  " + String(read_4_bytes(train_label_file)) + "  Should be:  2049");
         Serial.println("Train Label File number of items:  " + String(read_4_bytes(train_label_file)) + "  Should be:  60000");
 
-        Serial.println("Hold for 10s...");
+        Serial.println(F("Hold for 10s..."));
         delay(10000);
-        Serial.println("Waiting for 10s");
+        Serial.println(F("Waiting for 10s"));
         }
         // a will increment through the number of images I want to train. 
+
+      byte img_label[number_imgs]; 
+	    Matrix* img_data[number_imgs];
      int a = 0; 
-     Img** imgs = (Img**) malloc(number_imgs * sizeof(Img*));
 
-    while (train_image_file.available() && 
-      train_label_file.available()  && (a < number_imgs)) {
 
-      imgs[a] = (Img*)malloc(sizeof(Img));
-      imgs[a]->img_data = matrix_create(28, 28);
+    //while (train_image_file.available() && 
+    // train_label_file.available()  && (a < number_imgs)) {
+      //Serial.println(availableMemory());
+      //display_freeram();
+     // Serial.println(freeRam());
+
+      img_data[a] = matrix_create(28, 28);
+      //Serial.println(availableMemory());
       // read one image sample
       for (i = 0; i < IMAGE_SIZE; ++i) {
         data = train_image_file.read();
         image[i] = data;
-        imgs[a]->img_data->entries [i/28][i%28] = data; 
+        img_data[a]->entries[i/28][i%28] = data; 
       }
-
+      //Serial.println(availableMemory());
       // read one label sample
       label = train_label_file.read();
-      imgs[a]->label = label;
+      img_label[a] = label;
 
-      Serial.println ("before training ");
-
+      Serial.println (F("before training "));
+      a++;
 
       /* for (i = 0; i < IMAGE_SIZE; ++i) {
           Serial.print(image[i]);
@@ -146,21 +158,21 @@ void setup() {
         }
         Serial.println("========== LABEL OF ABOVE IMAGE IS:  " + String(label) + " ==========");
         */
-        a++;
-    }
-
+   // }
+      //display_freeram();
+     // Serial.println(freeRam());
       NeuralNetwork* net = network_create(784, 300, 10, 0.1);
-      Serial.println("nextline of training");
-	    network_train_batch_imgs(net, imgs, number_imgs);
-      Serial.println("run the training batches");
+      Serial.println(F("nextline of training"));
+	    network_train_batch_imgs(net, img_label, img_data, number_imgs);
+      Serial.println(F("run the training batches"));
 	    network_save(net, "testing_net");
-      Serial.println("save network");
+      Serial.println(F("save network"));
     // close the file:
     train_image_file.close();
     train_label_file.close();
   } else {
     // if the file didn't open, print an error:
-    Serial.print("error opening ");
+    Serial.print(F("error opening "));
     Serial.println(train_images);
   }
 	/* NeuralNetwork* net = network_load("testing_net");
@@ -170,7 +182,7 @@ void setup() {
         img->entries[s][m] = image[s * 28 + m];
       }
     }
-	 double score = network_predict_imgs(net, img, label, 1000);
+	 float score = network_predict_imgs(net, img, label, 1000);
 	 printf("Score: %1.5f\n", score);
 	 network_free(net);
    */
@@ -179,3 +191,4 @@ void setup() {
 void loop() {
   // nothing happens after setup
 }
+

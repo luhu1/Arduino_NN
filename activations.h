@@ -2,6 +2,6 @@
 
 #include "matrix.h"
 
-double sigmoid(double input);
+float sigmoid(float input);
 Matrix* sigmoidPrime(Matrix* m);
 Matrix* softmax(Matrix* m);

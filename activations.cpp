@@ -3,7 +3,7 @@
 #include <math.h>
 
 
-double sigmoid(double input) {
+float sigmoid(float input) {
 	return 1.0 / (1 + exp(-1 * input));
 }
 
@@ -18,7 +18,7 @@ Matrix* sigmoidPrime(Matrix* m) {
 }
 
 Matrix* softmax(Matrix* m) {
-	double total = 0;
+	float total = 0;
 	for (int i = 0; i < m->rows; i++) {
 		for (int j = 0; j < m->cols; j++) {
 			total += exp(m->entries[i][j]);

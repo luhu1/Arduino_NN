@@ -1,8 +1,10 @@
 #include <Arduino.h>
+#include "sram.h"
 #include "matrix.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 
 #define MAXCHAR 100
 
@@ -10,9 +12,9 @@ Matrix* matrix_create(int row, int col) {
 	Matrix *matrix = (Matrix*) malloc(sizeof(Matrix));
 	matrix->rows = row;
 	matrix->cols = col;
-	matrix->entries =  (double**) malloc(row * sizeof(double*));
+	matrix->entries =  (float**) malloc(row * sizeof(float*));
 	for (int i = 0; i < row; i++) {
-		matrix->entries[i] = (double*) malloc(col * sizeof(double));
+		matrix->entries[i] = (float*) malloc(col * sizeof(float));
 	}
 	return matrix;
 }
@@ -90,8 +92,8 @@ Matrix* matrix_load(char* file_string) {
 	return m;
 }
 
-double uniform_distribution(double low, double high) {
-	double difference = high - low; // The difference between the two
+float uniform_distribution(float low, float high) {
+	float difference = high - low; // The difference between the two
 	int scale = 10000;
 	int scaled_difference = (int)(difference * scale);
 	return low + (1.0 * (rand() % scaled_difference) / scale);
@@ -101,8 +103,8 @@ void matrix_randomize(Matrix* m, int n) {
 	// Pulling from a random distribution of 
 	// Min: -1 / sqrt(n)
 	// Max: 1 / sqrt(n)
-	double min = -1.0 / sqrt(n);
-	double max = 1.0 / sqrt(n);
+	float min = -1.0 / sqrt(n);
+	float max = 1.0 / sqrt(n);
 	for (int i = 0; i < m->rows; i++) {
 		for (int j = 0; j < m->cols; j++) {
 			m->entries[i][j] = uniform_distribution(min, max);
@@ -112,7 +114,7 @@ void matrix_randomize(Matrix* m, int n) {
 
 int matrix_argmax(Matrix* m) {
 	// Expects a Mx1 matrix
-	double max_score = 0;
+	float max_score = 0;
 	int max_idx = 0;
 	for (int i = 0; i < m->rows; i++) {
 		if (m->entries[i][0] > max_score) {
@@ -156,19 +158,20 @@ Matrix* matrix_flatten(Matrix* m, int axis) {
   Serial.println("done with flattening");
 	return mat;
   */
+  //display_freeram();
   	Matrix* mat;
 	if (axis == 0) {
-    Serial.println( "mat is at 0 "); 
+    Serial.println( F("mat is at 0 ")); 
 		mat = matrix_create(m->rows * m->cols, 1);
 	} else if (axis == 1) {
-    Serial.println("mat is at 1");
+    Serial.println(F("mat is at 1"));
 		mat = matrix_create(1, m->rows * m->cols);
 	} else {
-		Serial.println("Argument to matrix_flatten must be 0 or 1");
+		Serial.println(F("Argument to matrix_flatten must be 0 or 1"));
 		exit(EXIT_FAILURE);
 	}
   
-  Serial.println("Inside flattening");
+  Serial.println(F("Inside flattening"));
 
 	int index = 0;  // Index for the flattened matrix
 
@@ -176,14 +179,14 @@ Matrix* matrix_flatten(Matrix* m, int axis) {
 		for (int j = 0; j < m->cols; j++) {
       //Serial.println("inside the nested for loop");
 			if (axis == 0) {
-				mat->entries[0][index] = m->entries[i][j];
+				mat->entries[index][0] = m->entries[i][j];  
 			} else if (axis == 1) {
-				mat->entries[index][0] = m->entries[i][j];
+				mat->entries[0][index] = m->entries[i][j];
 			}
 			index++; // Increment the index for the flattened matrix
 		}
 	}
 
-	Serial.println("Done with flattening");
+	Serial.println(F("Done with flattening"));
 	return mat;
 }

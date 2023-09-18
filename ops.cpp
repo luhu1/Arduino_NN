@@ -53,7 +53,7 @@ Matrix* subtract(Matrix *m1, Matrix *m2) {
 	}
 }
 
-Matrix* apply(double (*func)(double), Matrix* m) {
+Matrix* apply(float (*func)(float), Matrix* m) {
 	Matrix *mat = matrix_copy(m);
 	for (int i = 0; i < m->rows; i++) {
 		for (int j = 0; j < m->cols; j++) {
@@ -71,10 +71,10 @@ Matrix* dot(Matrix *m1, Matrix *m2) {
 		for (int i = 0; i < m1->rows; i++) {
 			for (int j = 0; j < m2->cols; j++) {
         Serial.println("running inside nested for loop"); 
-				double sum = 0;
+				float sum = 0;
 				for (int k = 0; k < m2->rows; k++) {
           Serial.println("before the sum"); 
-					sum += m1->entries[i][k] * m2->entries[k][j];  // issue with the rows/ columns maybe switch where the k should be? but that somehow is not working.
+					sum += m1->entries[i][k] * m2->entries[k][j];  
           Serial.println("after the sum"); 
 				}
 				m->entries[i][j] = sum;
@@ -87,7 +87,7 @@ Matrix* dot(Matrix *m1, Matrix *m2) {
 	}
 }
 
-Matrix* scale(double n, Matrix* m) {
+Matrix* scale(float n, Matrix* m) {
 	Matrix* mat = matrix_copy(m);
 	for (int i = 0; i < m->rows; i++) {
 		for (int j = 0; j < m->cols; j++) {
@@ -97,7 +97,7 @@ Matrix* scale(double n, Matrix* m) {
 	return mat;
 }
 
-Matrix* addScalar(double n, Matrix* m) {
+Matrix* addScalar(float n, Matrix* m) {
 	Matrix* mat = matrix_copy(m);
 	for (int i = 0; i < m->rows; i++) {
 		for (int j = 0; j < m->cols; j++) {

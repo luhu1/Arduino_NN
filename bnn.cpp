@@ -11,7 +11,7 @@
 #define MAXCHAR 1000
 
 // 784, 300, 10
-NeuralNetwork* network_create(int input, int hidden, int output, double lr) {
+NeuralNetwork* network_create(int input, int hidden, int output, float lr) {
 	NeuralNetwork* net = (NeuralNetwork*) malloc(sizeof(NeuralNetwork));
 	net->input = input;
 	net->hidden = hidden;
@@ -112,34 +112,33 @@ void network_train(NeuralNetwork* net, Matrix* input, Matrix* output) {
 	matrix_free(hidden_errors);
 }
 
-void network_train_batch_imgs(NeuralNetwork* net, Img** imgs, int batch_size) {
+void network_train_batch_imgs(NeuralNetwork* net, byte label[], Matrix* data[], int batch_size) {
 	for (int i = 0; i < batch_size; i++) {
 		if (i % 100 == 0) printf("Img No. %d\n", i);
-		Img* cur_img = imgs[i];
-		Matrix* img_data = matrix_flatten(cur_img->img_data, 0); // 0 = flatten to column vector
+		//Img* cur_img = imgs[i];
+
+		Matrix* img_data = matrix_flatten(data[i], 0); // 0 = flatten to column vector
 		Matrix* output = matrix_create(10, 1);
-    Serial.println("after output");
-		output->entries[cur_img->label][0] = 1; // Setting the result
-    Serial.println("afrer setting output to 1"); 
+		output->entries[label[i]][0] = 1; // Setting the result
 		network_train(net, img_data, output);
-    Serial.println("After train"); 
 		matrix_free(output);
 		matrix_free(img_data);
 	}
 }
 
-Matrix* network_predict_img(NeuralNetwork* net, Img* img) {
-	Matrix* img_data = matrix_flatten(img->img_data, 0);
+
+Matrix* network_predict_img(NeuralNetwork* net, Matrix* data) {
+	Matrix* img_data = matrix_flatten(data, 0);
 	Matrix* res = network_predict(net, img_data);
 	matrix_free(img_data);
 	return res;
 }
 
-double network_predict_imgs(NeuralNetwork* net, Img** imgs, int n) {
+float network_predict_imgs(NeuralNetwork* net, byte label[], Matrix* data[], int n) {
 	int n_correct = 0;
 	for (int i = 0; i < n; i++) {
-		Matrix* prediction = network_predict_img(net, imgs[i]);
-		if (matrix_argmax(prediction) == imgs[i]->label) {
+		Matrix* prediction = network_predict_img(net, data[i]);
+		if (matrix_argmax(prediction) == label[i]) {
 			n_correct++;
 		}
 		matrix_free(prediction);
